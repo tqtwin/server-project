@@ -4,35 +4,48 @@ const userService = require('../services/user.service');
 const PostService = require('../services/post.service')
 class UserController {
     // Hàm đăng ký
-   async  signup(req, res) {
-    try {
-        const { name, age, avatar, password, email, phone, address } = req.body;
+    async signup(req, res) {
+        try {
+            const { name, age, avatar, password, email, phone, address } = req.body;
 
-        // Kiểm tra email đã tồn tại
-        const existingUser = await userModel.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json({ message: 'Email already exists', success: false });
+            // Kiểm tra email đã tồn tại
+            const existingUser = await userModel.findOne({ email });
+            if (existingUser) {
+                return res.status(400).json({ message: 'Email already exists', success: false });
+            }
+
+            // Mã hóa mật khẩu và tạo người dùng mới
+            const hashedPassword = await bcrypt.hash(password, 10);
+            const user = new userModel({ name, age, avatar, password: hashedPassword, email, phone, address });
+
+            await user.save();
+
+            return res.status(201).json({ message: 'User created successfully', success: true });
+        } catch (error) {
+            console.error('Error adding user:', error);
+
+            // Handle Mongoose validation errors
+            if (error.name === 'ValidationError') {
+                const errors = Object.keys(error.errors).map(key => error.errors[key].message);
+                return res.status(400).json({ message: errors.join(', '), success: false });
+            }
+
+            return res.status(500).json({ message: 'Error adding user', success: false });
         }
-
-        // Mã hóa mật khẩu và tạo người dùng mới
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const user = new userModel({ name, age, avatar, password: hashedPassword, email, phone, address });
-
-        await user.save();
-
-        return res.status(201).json({ message: 'User created successfully', success: true });
-    } catch (error) {
-        console.error('Error adding user:', error);
-
-        // Handle Mongoose validation errors
-        if (error.name === 'ValidationError') {
-            const errors = Object.keys(error.errors).map(key => error.errors[key].message);
-            return res.status(400).json({ message: errors.join(', '), success: false });
-        }
-
-        return res.status(500).json({ message: 'Error adding user', success: false });
     }
-}
+    async getListUser(req, res) {
+        try {
+            const users = await userService.getListUsersWithCache();
+            if (users) {
+                return res.json(users);
+            }
+             const usersdata = await userService.getUsers();
+             await userService.setUsersCache(usersdata);
+            return res.status(200).json({ success: true, data: usersdata });
+        } catch (error) {
+            return res.status(500).json({ message: 'Error fetching products', success: false, error: error.message });
+        }
+    }
     // Hàm lấy người dùng theo ID
     async getUserById(req, res) {
         const userId = req.params.id;

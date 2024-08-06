@@ -1,12 +1,12 @@
 const PostService = require('../services/post.service');
 //import mongoseee
 const mongoose = require('mongoose');
-const userModel = require('../models/user')
+const userModel = require('../models/user');
+const postService = require('../services/post.service');
 class PostController {
     async createPost(req, res) {
         const body = req.body;
         const { userId } = body;
-
         try {
             const userDetail = await userModel.findById(userId);
             if (!userDetail) {
@@ -24,6 +24,8 @@ class PostController {
             res.status(500).json({ message: 'Error creating post', error: error.message });
         }
     }
+
+
     // async getPostById(req, res) {
     //     try {
     //         const postId = req.params.id;
@@ -49,7 +51,14 @@ class PostController {
             return res.status(500).send(error);
         }
     }
-
+    async getListPosts(req, res) {
+        try {
+            const posts = await PostService.getPosts();
+            return res.status(200).json({ success: true, data: posts });
+        } catch (error) {
+            return res.status(500).json({ message: 'Error fetching products', success: false, error: error.message });
+        }
+    }
     async updatePost(req, res) {
         try {
             const postId = req.params.id;

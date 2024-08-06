@@ -24,7 +24,14 @@ class PostService {
         }
     }
 
-
+    async getPosts() {
+        try {
+            const posts = await postModel.find().populate('userId');
+            return posts;
+        } catch (error) {
+            throw error;
+        }
+    }
     async updatePost(postId, newData) {
         try {
             const updatedPost = await postModel.findByIdAndUpdate(postId, newData, { new: true });

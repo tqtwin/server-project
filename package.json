@@ -5,7 +5,10 @@
     "dotenv": "^16.4.5",
     "env": "^0.0.2",
     "express": "^4.19.2",
-    "mongoose": "^8.4.1"
+    "mongoose": "^8.4.1",
+    "redis": "^4.7.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
   },
   "name": "backend",
   "version": "1.0.0",
