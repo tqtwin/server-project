@@ -35,15 +35,15 @@ class UserController {
     }
     async getListUser(req, res) {
         try {
-            const users = await userService.getListUsersWithCache();
-            if (users) {
-                return res.json(users);
-            }
-             const usersdata = await userService.getUsers();
-             await userService.setUsersCache(usersdata);
-            return res.status(200).json({ success: true, data: usersdata });
+            // const users = await userService.getListUsersWithCache();
+            // if (users) {
+            //     return res.json({ success: true, data: users });
+            // }
+            const usersData = await userService.getUsers();
+            // await userService.setUsersCache(usersData);
+            return res.status(200).json({ success: true, data: usersData });
         } catch (error) {
-            return res.status(500).json({ message: 'Error fetching products', success: false, error: error.message });
+            return res.status(500).json({ message: 'Error fetching users', success: false, error: error.message });
         }
     }
     // Hàm lấy người dùng theo ID

@@ -2,18 +2,26 @@ const userModel = require('../models/user');
 const redisClient = require('../dbs/redis');
 
 class UserService {
-     getListUsersWithCache = async (params = {}) => {
-        const users = await redisClient.get('users');
-        if (users) {
-            return JSON.parse(users);
+    getListUsersWithCache = async (params = {}) => {
+        try {
+            const users = await redisClient.get('us');
+            if (users) {
+                return JSON.parse(users);
+            }
+            return null;
+        } catch (error) {
+            console.error('Error getting users from cache:', error);
+            return null;
         }
-
-        return null;
     }
-
     setUsersCache = async (users) => {
-        return redisClient.set('users', JSON.stringify(users));
+        try {
+            return await redisClient.set('us', JSON.stringify(users));
+        } catch (error) {
+            console.error('Error setting users to cache:', error);
+        }
     }
+
     async createUser(data) {
         try {
             const user = await userModel.create(data);
