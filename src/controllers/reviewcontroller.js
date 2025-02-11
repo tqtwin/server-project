@@ -3,7 +3,6 @@ const reviewService = require('../services/review.service');
 const mongoose = require('mongoose');
 const userModel = require('../models/user');
 const productModel = require('../models/product');
-const { bucket } = require('../dbs/firebase');
 class reviewController {
     async createReview(req, res) {
         const { content, rating, userId, productId, imageUrls } = req.body;
