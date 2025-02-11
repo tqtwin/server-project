@@ -12,7 +12,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/v1/orders/create-order:
+ * /api/v1/orders:
  *   post:
  *     summary: Tạo đơn hàng mới
  *     tags:
@@ -32,26 +32,26 @@ const router = express.Router();
  *                 items:
  *                   type: object
  *                   properties:
- *                     product:
+ *                     productId:
  *                       type: string
  *                       description: ID của sản phẩm
  *                     quantity:
  *                       type: number
  *                       description: Số lượng sản phẩm
- *                     price:
- *                       type: number
- *                       description: Giá của sản phẩm
+ *               statusId:
+ *                 type: string
+ *                 description: ID trạng thái đơn hàng ban đầu
  *     responses:
  *       201:
  *         description: Đơn hàng được tạo thành công
  *       500:
  *         description: Lỗi khi tạo đơn hàng
  */
-router.post('/create-order', orderController.createOrder);
+router.post('/', orderController.createOrder);
 
 /**
  * @swagger
- * /api/v1/orders/orders:
+ * /api/v1/orders:
  *   get:
  *     summary: Lấy danh sách đơn hàng
  *     tags:
@@ -83,11 +83,11 @@ router.post('/create-order', orderController.createOrder);
  *       500:
  *         description: Lỗi khi lấy danh sách đơn hàng
  */
-router.get('/orders', orderController.getOrders);
+router.get('/', orderController.getOrders);
 
 /**
  * @swagger
- * /api/v1/orders/orders/{id}:
+ * /api/v1/orders/{id}:
  *   get:
  *     summary: Lấy thông tin đơn hàng theo ID
  *     tags:
@@ -107,11 +107,11 @@ router.get('/orders', orderController.getOrders);
  *       500:
  *         description: Lỗi khi lấy thông tin đơn hàng
  */
-router.get('/orders/:id', orderController.getOrderById);
+router.get('/:id', orderController.getOrderById);
 
 /**
  * @swagger
- * /api/v1/orders/orders/{id}:
+ * /api/v1/orders/{id}:
  *   put:
  *     summary: Cập nhật thông tin đơn hàng theo ID
  *     tags:
@@ -141,11 +141,11 @@ router.get('/orders/:id', orderController.getOrderById);
  *       500:
  *         description: Lỗi khi cập nhật đơn hàng
  */
-router.put('/orders/:id', orderController.updateOrder);
+router.put('/:id', orderController.updateOrder);
 
 /**
  * @swagger
- * /api/v1/orders/orders/{id}:
+ * /api/v1/orders/{id}:
  *   delete:
  *     summary: Xóa đơn hàng theo ID
  *     tags:
@@ -163,6 +163,7 @@ router.put('/orders/:id', orderController.updateOrder);
  *       500:
  *         description: Lỗi khi xóa đơn hàng
  */
-router.delete('/orders/:id', orderController.deleteOrder);
-
+router.delete('/:id', orderController.deleteOrder);
+router.post('/update-payment-status', orderController.updateOrderPaymentStatus);
+router.delete('/', orderController.deleteOrderA)
 module.exports = router;

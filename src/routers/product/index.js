@@ -1,8 +1,12 @@
 const express = require('express');
 const productController = require('../../controllers/productcontroller');
-
+const { authenticateToken, isAdmin } = require('../../middlewares/auth');
+const { Router } = require('express');
 const router = express.Router();
-
+router.get('/best-selling', productController.getBestSellingProducts);
+router.get('/updaterating', productController.UpdateRating)
+router.get('/isDelete', productController.getIsDelete)
+router.put('/update-products-sale', productController.updateAllProductsWithSale);
 /**
  * @swagger
  * tags:
@@ -12,7 +16,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/v1/products/create-products:
+ * /api/v1/products/:
  *   post:
  *     summary: Tạo sản phẩm mới
  *     tags:
@@ -70,11 +74,12 @@ const router = express.Router();
  *       500:
  *         description: Lỗi khi tạo sản phẩm
  */
-router.post('/create-products', productController.createProduct);
+
+router.post('/',authenticateToken, isAdmin, productController.createProduct);
 
 /**
  * @swagger
- * /api/v1/products/products:
+ * /api/v1/products/:
  *   get:
  *     summary: Lấy danh sách sản phẩm
  *     tags:
@@ -123,11 +128,11 @@ router.post('/create-products', productController.createProduct);
  *       500:
  *         description: Lỗi khi lấy danh sách sản phẩm
  */
-router.get('/products', productController.getProducts);
+router.get('/', productController.getProducts);
 
 /**
  * @swagger
- * /api/v1/products/products/{id}:
+ * /api/v1/products/{id}:
  *   get:
  *     summary: Lấy thông tin sản phẩm theo ID
  *     tags:
@@ -147,11 +152,11 @@ router.get('/products', productController.getProducts);
  *       500:
  *         description: Lỗi khi lấy thông tin sản phẩm
  */
-router.get('/products/:id', productController.getProductById);
+router.get('/:id', productController.getProductById);
 
 /**
  * @swagger
- * /api/v1/products/products/{id}:
+ * /api/v1/products/{id}:
  *   put:
  *     summary: Cập nhật thông tin sản phẩm theo ID
  *     tags:
@@ -218,11 +223,11 @@ router.get('/products/:id', productController.getProductById);
  *       500:
  *         description: Lỗi khi cập nhật sản phẩm
  */
-router.put('/products/:id', productController.updateProduct);
+router.put('/:id',authenticateToken,isAdmin, productController.updateProduct);
 
 /**
  * @swagger
- * /api/v1/products/products/{id}:
+ * /api/v1/products/{id}:
  *   delete:
  *     summary: Xóa sản phẩm theo ID
  *     tags:
@@ -240,6 +245,9 @@ router.put('/products/:id', productController.updateProduct);
  *       500:
  *         description: Lỗi khi xóa sản phẩm
  */
-router.delete('/products/:id', productController.deleteProduct);
+router.delete('/:id',authenticateToken,isAdmin, productController.deleteProduct);
+router.delete('/:id/soft-delete',authenticateToken,isAdmin, productController.softDeleteProduct)
+router.put('/:id/restore',authenticateToken,isAdmin, productController.restoreProduct)
+router.get('/categories/:categoryId', productController.getProductsByCategory)
 
 module.exports = router;

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const UserController = require('../../controllers/usercontroller');
-
+const userService = require('../../services/user.service')
 /**
  * @swagger
  * tags:
@@ -11,7 +11,7 @@ const UserController = require('../../controllers/usercontroller');
 
 /**
  * @swagger
- * /api/v1/users/create:
+ * /api/v1/users/:
  *   post:
  *     summary: Đăng ký người dùng
  *     tags:
@@ -61,11 +61,11 @@ const UserController = require('../../controllers/usercontroller');
  *       400:
  *         description: Dữ liệu không hợp lệ
  */
-router.post('/create', UserController.signup);
+router.post('/', UserController.signup);
 
 /**
  * @swagger
- * /api/v1/users/get-user-by-id/{id}:
+ * /api/v1/users/{id}:
  *   get:
  *     summary: Lấy người dùng theo ID
  *     tags:
@@ -120,11 +120,11 @@ router.post('/create', UserController.signup);
  *                     type: string
  *                     example: "60d21b4667d0d8992e610c85"
  */
-router.get('/get-user-by-id/:id', UserController.getUserById);
+router.get('/:id', UserController.getUserById);
 
 /**
  * @swagger
- * /api/v1/users/get-list-user:
+ * /api/v1/users/:
  *   get:
  *     summary: Lấy danh sách người dùng
  *     tags:
@@ -174,7 +174,7 @@ router.get('/get-user-by-id/:id', UserController.getUserById);
  *                       type: string
  *                       example: "60d21b4667d0d8992e610c85"
  */
-router.get('/get-list-user', UserController.getListUser);
+router.get('/', UserController.getListUser);
 
 /**
  * @swagger
@@ -201,6 +201,25 @@ router.get('/get-list-user', UserController.getListUser);
  *     responses:
  *       200:
  *         description: Đăng nhập thành công
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Login successful"
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 token:
+ *                   type: string
+ *                   description: JWT token cho người dùng
+ *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *                 status:
+ *                   type: string
+ *                   description: Trạng thái người dùng
+ *                   example: "admin"
  *       401:
  *         description: Sai email hoặc mật khẩu
  */
@@ -208,7 +227,7 @@ router.post('/login', UserController.login);
 
 /**
  * @swagger
- * /api/v1/users/update/{id}:
+ * /api/v1/users/{id}:
  *   put:
  *     summary: Cập nhật người dùng
  *     tags:
@@ -267,11 +286,11 @@ router.post('/login', UserController.login);
  *       404:
  *         description: Không tìm thấy người dùng
  */
-router.put('/update/:id', UserController.updateUser);
+router.put('/:id', UserController.updateUser);
 
 /**
  * @swagger
- * /api/v1/users/delete/{id}:
+ * /api/v1/users/{id}:
  *   delete:
  *     summary: Xóa người dùng và bài viết của họ
  *     tags:
@@ -289,6 +308,12 @@ router.put('/update/:id', UserController.updateUser);
  *       404:
  *         description: Không tìm thấy người dùng
  */
-router.delete('/delete/:id', UserController.deleteUserAndPosts);
-
+router.delete('/:id', UserController.deleteUserAndPosts);
+router.post('/verify', UserController.verifyCode);
+router.post('/reset-password', UserController.resetPassword);
+router.post('/forgot-password', UserController.forgotPassword)
+router.post('/google-login', UserController.googleLogin)
+router.post('/verify-code', UserController.verifyCodePassword);
+router.post('/verify-password', UserController.verifyPassword)
+router.patch('/:id', UserController.changePassword)
 module.exports = router;

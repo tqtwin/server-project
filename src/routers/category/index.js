@@ -1,6 +1,6 @@
 const express = require('express');
 const categoryController = require('../../controllers/categorycontroller');
-
+const { authenticateToken, isAdmin } = require('../../middlewares/auth');
 const router = express.Router();
 
 /**
@@ -8,7 +8,7 @@ const router = express.Router();
  * tags:
  *   name: Categories
  *   description: Các endpoint liên quan đến danh mục
- * /api/v1/categories/create-categories:
+ * /api/v1/categories/:
  *   post:
  *     summary: Tạo danh mục mới
  *     tags:
@@ -17,11 +17,11 @@ const router = express.Router();
  *       200:
  *         description: Danh mục được tạo thành công
  */
-router.post('/create-categories', categoryController.createCategory);
+router.post('/',authenticateToken,isAdmin, categoryController.createCategory);
 
 /**
  * @swagger
- * /api/v1/categories/categories:
+ * /api/v1/categories/:
  *   get:
  *     summary: Lấy danh sách danh mục
  *     tags:
@@ -30,11 +30,11 @@ router.post('/create-categories', categoryController.createCategory);
  *       200:
  *         description: Danh sách danh mục
  */
-router.get('/categories', categoryController.getCategories);
+router.get('/', categoryController.getCategories);
 
 /**
  * @swagger
- * /api/v1/categories/categories/{id}:
+ * /api/v1/categories/{id}:
  *   get:
  *     summary: Lấy thông tin danh mục theo ID
  *     tags:
@@ -50,11 +50,11 @@ router.get('/categories', categoryController.getCategories);
  *       200:
  *         description: Thông tin chi tiết của danh mục
  */
-router.get('/categories/:id', categoryController.getCategoryById);
+router.get('/:id', categoryController.getCategoryById);
 
 /**
  * @swagger
- * /api/v1/categories/categories/{id}:
+ * /api/v1/categories/{id}:
  *   put:
  *     summary: Cập nhật thông tin danh mục theo ID
  *     tags:
@@ -70,11 +70,11 @@ router.get('/categories/:id', categoryController.getCategoryById);
  *       200:
  *         description: Danh mục được cập nhật thành công
  */
-router.put('/categories/:id', categoryController.updateCategory);
+router.put('/:id',authenticateToken,isAdmin, categoryController.updateCategory);
 
 /**
  * @swagger
- * /api/v1/categories/categories/{id}:
+ * /api/v1/categories/{id}:
  *   delete:
  *     summary: Xóa danh mục theo ID
  *     tags:
@@ -90,6 +90,6 @@ router.put('/categories/:id', categoryController.updateCategory);
  *       200:
  *         description: Danh mục được xóa thành công
  */
-router.delete('/categories/:id', categoryController.deleteCategory);
+router.delete('/:id',authenticateToken,isAdmin, categoryController.deleteCategory);
 
 module.exports = router;

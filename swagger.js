@@ -11,26 +11,29 @@ const swaggerDefinition = {
   },
   servers: [
     {
-      url: 'http://localhost:8081',
+      url: 'http://localhost:8083',
       description: 'Máy chủ phát triển',
     },
   ],
   tags: [
-    {
-      name: 'Users',
-      description: 'Các endpoint liên quan đến người dùng',
+    { name: 'Users', description: 'Các endpoint liên quan đến người dùng' },
+    { name: 'Reviews', description: 'Các endpoint liên quan đến đánh giá' },
+    { name: 'Products', description: 'Các endpoint liên quan đến sản phẩm' },
+    { name: 'Categories', description: 'Các endpoint liên quan đến danh mục' },
+    { name: 'Suppliers', description: 'Các endpoint liên quan đến nhà cung cấp' },
+  ],
+  components: {
+    securitySchemes: {
+      bearerAuth: {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+      },
     },
+  },
+  security: [
     {
-      name: 'Posts',
-      description: 'Các endpoint liên quan đến bài viết',
-    },
-    {
-      name: 'Products',
-      description: 'Các endpoint liên quan đến sản phẩm',
-    },
-    {
-      name: 'Categories',
-      description: 'Các endpoint liên quan đến danh mục',
+      bearerAuth: [],
     },
   ],
 };
@@ -38,7 +41,7 @@ const swaggerDefinition = {
 // Options for the swagger docs
 const options = {
   swaggerDefinition,
-  apis: ['./src/routers/**/*.js'], // Đường dẫn đến các file API
+  apis: ['./src/routers/**/*.js', './src/models/**/*.js'], // Đường dẫn đến các file API
 };
 
 // Initialize swagger-jsdoc

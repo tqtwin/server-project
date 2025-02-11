@@ -1,59 +1,24 @@
+const { type } = require('express/lib/response');
 const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
 
-const emailValidator = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-};
+const userSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: false },
+    birthday: { type: Date ,},
+    address: { type: String },
+    gender: { type: String },
+    phone: { type: String },
+    status: { type: String },
+    isLock: { type: Boolean, default: false },
+    roleId: { type: mongoose.Schema.Types.ObjectId, ref: 'Role', required: true },
+    avatar: { type: String },
+    reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Review' }],
+    news: [{ type: mongoose.Schema.Types.ObjectId, ref: 'New' }],
+    orders: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Order' }],
+    isVerified: { type: Boolean, default: false }, // Trường để xác nhận email
+}, { timestamps: false });
 
-const userSchema = new Schema({
-    name: {
-        type: String,
-        required: [true, 'Name is required']
-    },
-    email: {
-        type: String,
-        required: [true, 'Email is required'],
-        unique: true,
-        validate: {
-            validator: emailValidator,
-            message: 'Please fill a valid email address'
-        }
-    },
-    age: {
-        type: Number,
-        required: true
-    },
-    address: {
-        type: String,
-        required: [true, 'Address is required']
-    },
-    phone: {
-        type: String,
-        required: [true, 'Phone is required']
-    },
-    posts: [{
-        type: Schema.Types.ObjectId,
-        ref: 'Post',
-    }],
-    orders: [{
-        type: Schema.Types.ObjectId,
-        ref: 'Order',
-    }],
-    status: {
-        type: String,
-        required: true,
-        default: 'active'
-    },
-    password: {
-        type: String,
-        required: [true, 'Password is required']
-    },
-    avatar: {
-        type: String,
-    }
-});
 
 const User = mongoose.model('User', userSchema);
-
 module.exports = User;

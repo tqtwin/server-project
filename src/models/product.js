@@ -1,23 +1,39 @@
 const mongoose = require('mongoose');
+const StockEntry = require('./stockEntry');
+const { type } = require('express/lib/response');
 
 const productSchema = new mongoose.Schema({
     name: { type: String, required: true },
     price: { type: Number, required: true },
-    oldPrice: { type: Number },
+    capitalPrice: { type: Number},
+    sold:{type:Number},
+    originalPrice:{type:Number},
     description: { type: String },
-    quantity: { type: Number },
     image: { type: String },
     images: { type: [String] },
-    brand: { type: String },
-    review: { type: Number },
-    category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
+    supplierId: { type: mongoose.Schema.Types.ObjectId, ref: 'Supplier', required: true },
+    categoryId: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true }],
+    reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Review' }],
     rating: { type: Number },
-    reviews: { type: [String] },
+    sale: { type: Number },
     created_at: { type: Date, default: Date.now },
-    updated_at: { type: Date, default: Date.now }
+    last_updated: { type: Date, default: Date.now },
+    isDelete: {type:Boolean , default: false},
+    delete_at: {type: Date}
 });
+
+// Middleware để cập nhật danh sách sản phẩm trong danh mục
+productSchema.post('save', async function(doc) {
+    const Category = require('./category'); // Nhập model Category
+    await Category.findByIdAndUpdate(this.categoryId, {
+        $addToSet: { products: doc._id } // Thêm productId vào danh sách sản phẩm
+    });
+});
+// Trong schema của product
+productSchema.index({ name: 'text', description: 'text', tags: 'text' });
+
 productSchema.pre('save', function(next) {
-    this.updated_at = Date.now();
+    this.last_updated = Date.now();
     next();
 });
 
