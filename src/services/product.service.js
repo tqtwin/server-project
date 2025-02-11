@@ -7,46 +7,81 @@ const cron = require('node-cron');
 // Đặt cron.schedule ở đầu file hoặc trong file cron.js
 
 class ProductService {
+    // async createProduct(data) {
+    //     try {
+    //         const { image, images, categoryId } = data;
+    //         // Log dữ liệu đầu vào
+    //         const imageUrls = [];
+
+    //         // Helper function to upload a base64 image and return its URL
+    //         const uploadImage = async (base64Image, fileName) => {
+    //             console.log(`Uploading image: ${fileName}`);
+    //             try {
+    //                 const buffer = Buffer.from(base64Image.split(',')[1], 'base64');
+    //                 console.log('Buffer created for:', fileName);
+
+    //                 const file = bucket.file(`products/${fileName}`);
+    //                 console.log(`Saving file to bucket: products/${fileName}`);
+
+    //                 await file.save(buffer, {
+    //                     metadata: { contentType: 'image/jpeg' },
+    //                 });
+    //                 console.log('File saved successfully:', fileName);
+
+    //                 await file.makePublic();  // Make the file publicly accessible
+    //                 console.log('File made public:', fileName);
+
+    //                 return file.publicUrl();  // Return the public URL for storage
+    //             } catch (error) {
+    //                 console.error('Error uploading image:', fileName, error);
+    //                 throw error;
+    //             }
+    //         };
+
+    //         // Upload main image
+    //         console.log('Uploading main image...');
+    //         const mainImageUrl = await uploadImage(image, `main_${Date.now()}.jpg`);
+    //         console.log('Main image uploaded:', mainImageUrl);
+
+    //         // Upload additional images concurrently using Promise.all
+    //         console.log('Uploading additional images...');
+    //         const imageUploadPromises = images.map((img, idx) =>
+    //             uploadImage(img, `image_${Date.now()}_${idx}.jpg`)
+    //         );
+
+    //         const additionalImageUrls = await Promise.all(imageUploadPromises);
+    //         console.log('Additional images uploaded:', additionalImageUrls);
+
+    //         // Combine the URLs
+    //         const productData = {
+    //             ...data,
+    //             mainImage: mainImageUrl,
+    //             images: additionalImageUrls,
+    //         };
+    //         console.log('Final product data:', productData);
+
+    //         // Save product data to database
+    //         const product = await productModel.create(productData);
+    //         console.log('Product created successfully:', product);
+
+    //         return product;
+    //     } catch (error) {
+    //         console.error('Error in createProduct:', error);
+    //         throw error;  // Rethrow error for higher level handling
+    //     }
+    // }
     async createProduct(data) {
         try {
-            const { image, images, categoryId } = data;
-            const imageUrls = [];
+            console.log('Received product data:', data);
 
-            // Helper function to upload a base64 image and return its URL
-            const uploadImage = async (base64Image, fileName) => {
-                const buffer = Buffer.from(base64Image.split(',')[1], 'base64');
-                const file = bucket.file(`products/${fileName}`);
-                await file.save(buffer, {
-                    metadata: { contentType: 'image/jpeg' },
-                });
-                await file.makePublic();  // Make the file publicly accessible
-                return file.publicUrl();  // Return the public URL for storage
-            };
+            // Save product data to the database directly
+            const product = await productModel.create(data);
 
-            // Upload main image (do it first for consistency)
-            const mainImageUrl = await uploadImage(image, `main_${Date.now()}.jpg`);
-
-            // Upload additional images concurrently using Promise.all
-            const imageUploadPromises = images.map((img, idx) =>
-                uploadImage(img, `image_${Date.now()}_${idx}.jpg`)
-            );
-
-            // Wait for all images to upload
-            const additionalImageUrls = await Promise.all(imageUploadPromises);
-
-            // Combine the URLs: one for the main image and one array for additional images
-            const productData = {
-                ...data,
-                mainImage: mainImageUrl,  // Main image URL
-                images: additionalImageUrls,  // Array of additional image URLs
-            };
-
-            // Save product data to database
-            const product = await productModel.create(productData);  // Save the product with the image URLs
+            console.log('Product created successfully:', product);
             return product;
-
         } catch (error) {
-            throw error;  // Rethrow error for higher level handling
+            console.error('Error in createProduct:', error);
+            throw error;  // Rethrow the error for higher-level handling
         }
     }
 

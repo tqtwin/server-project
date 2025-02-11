@@ -316,7 +316,7 @@ class UserController {
                 process.env.JWT_SECRET,
                 { expiresIn: '1h' }
             );
-
+console.log( process.env.JWT_SECRET)
             return res.status(200).json({
                 message: 'Login successful',
                 success: true,

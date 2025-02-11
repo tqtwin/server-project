@@ -32,6 +32,7 @@ async function isAdmin(req, res, next) {
         }
         req.user = user; // Add user info for further use in the request
         next();
+
     } catch (error) {
         return res.status(500).json({ message: 'Server error during authorization', success: false });
     }
