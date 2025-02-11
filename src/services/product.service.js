@@ -1,7 +1,7 @@
 const productModel = require('../models/product');
 
 const inventoryModel = require('../models/inventory');
-const { bucket } = require('../dbs/firebase');
+
 const { default: mongoose } = require('mongoose');
 const cron = require('node-cron');
 // Đặt cron.schedule ở đầu file hoặc trong file cron.js
