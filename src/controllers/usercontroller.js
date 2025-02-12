@@ -312,11 +312,11 @@ class UserController {
             }
             const role = user.roleId.name;
             const token = jwt.sign(
-                { id: user._id, role, status: user.status , name: user.name},
+                { id: user._id, role, status: user.status , name: user.name,},
                 process.env.JWT_SECRET,
                 { expiresIn: '1h' }
             );
-console.log( process.env.JWT_SECRET)
+
             return res.status(200).json({
                 message: 'Login successful',
                 success: true,

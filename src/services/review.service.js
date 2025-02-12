@@ -1,7 +1,7 @@
 const reviewModel = require('../models/review');
 const UserModel = require('../models/user');
 const productModel = require('../models/product');
-
+const { default: mongoose } = require('mongoose');
 class ReviewService {
     async createReview(data) {
         try {
@@ -50,6 +50,25 @@ class ReviewService {
         }
     }
 
+    async addReplyToReview(reviewId, userId, text) {
+        try {
+          const reply = {
+            userId: new mongoose.Types.ObjectId(userId),
+            text: text,
+            created_at: new Date()
+          };
+
+          const updatedReview = await reviewModel.findByIdAndUpdate(
+            reviewId,
+            { $push: { repCmt: reply } }, // Thêm phản hồi vào mảng `repCmt`
+            { new: true }
+          ).populate('repCmt.userId', 'name'); // Populate để lấy thông tin người dùng
+
+          return updatedReview;
+        } catch (error) {
+          throw new Error('Error adding reply to review: ' + error.message);
+        }
+      }
 
     async getReviewsByProductId(productId) {
         try {

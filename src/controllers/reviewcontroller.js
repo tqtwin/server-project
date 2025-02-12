@@ -177,6 +177,29 @@ class reviewController {
             return res.status(500).json({ message: 'Error updating review', error: error.message });
         }
     }
+    async replyToReview(req, res) {
+        try {
+          const reviewId = req.params.id;
+          const { userId, text } = req.body;
+
+          if (!text) {
+            return res.status(400).json({ message: 'Reply content is required' });
+          }
+
+          const review = await reviewService.addReplyToReview(reviewId, userId, text);
+          if (!review) {
+            return res.status(404).json({ message: 'Review not found' });
+          }
+
+          return res.status(200).json({
+            message: 'Reply added successfully!',
+            review
+          });
+        } catch (error) {
+          return res.status(500).json({ message: 'Error replying to review', error: error.message });
+        }
+      }
+
     async deleteReview(req, res) {
         try {
             const reviewId = req.params.id;

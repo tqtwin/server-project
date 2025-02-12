@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const reviewController = require('../../controllers/reviewcontroller');
 
+
 /**
  * @swagger
  * tags:
@@ -204,4 +205,5 @@ router.delete('/:id', reviewController.deleteReview);
 
 router.patch('/:id/lock', reviewController.lockReview);
 
+router.post('/:id/reply', reviewController.replyToReview);
 module.exports = router;

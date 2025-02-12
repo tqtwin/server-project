@@ -13,21 +13,40 @@ class ProductController {
     }
     async updateAllProductsWithSale(req, res) {
         try {
-            const updatedProducts = await ProductService.updateProductsWithSale();
+          const { productIds, sale } = req.body;
 
-            return res.status(200).json({
-                message: 'All products with sale updated successfully',
-                success: true,
-                data: updatedProducts,
+          if (!productIds || !Array.isArray(productIds) || productIds.length === 0) {
+            return res.status(400).json({
+              message: 'Danh sách sản phẩm không hợp lệ.',
+              success: false,
             });
+          }
+
+          if (sale < 0 || sale > 100) {
+            return res.status(400).json({
+              message: 'Phần trăm giảm giá phải nằm trong khoảng từ 0 đến 100.',
+              success: false,
+            });
+          }
+
+          const updatedProducts = await ProductService.updateProductsWithSale(productIds, sale);
+
+          return res.status(200).json({
+            message: 'Cập nhật giảm giá thành công.',
+            success: true,
+            data: updatedProducts,
+          });
         } catch (error) {
-            return res.status(500).json({
-                message: 'Error updating products with sale',
-                success: false,
-                error: error.message,
-            });
+          console.error('Error in updateAllProductsWithSale:', error);
+          return res.status(500).json({
+            message: 'Lỗi khi cập nhật giảm giá.',
+            success: false,
+            error: error.message,
+          });
         }
-    }
+      }
+
+
     async getProducts(req, res) {
         try {
             const {

@@ -104,7 +104,9 @@ class ProductService {
             } = query;
 
             // Build query object
-            let searchQuery = {};
+            let searchQuery = {
+                isDelete: { $ne: true }
+            };
             if (id) {
                 searchQuery._id = new mongoose.Types.ObjectId(id);
             }
@@ -195,7 +197,12 @@ class ProductService {
                 .populate({ path: 'supplierId', select: 'name' })
                 .populate({ path: 'categoryId', select: 'name' })
                 .lean();
-            if (!product) return null;
+
+                if (!product || product.isDelete === true) {
+                    const error = new Error('Product not found');
+                    error.statusCode = 404;
+                    throw error;
+                }
             // Lấy thông tin từ Inventory
             const inventory = await inventoryModel.findOne({ productId: id }).lean();
             product.inventory = inventory ? { quantity: inventory.quantity, capitalPrice: inventory.capitalPrice } : null;
@@ -241,23 +248,34 @@ async softDeleteProduct(req, res) {
             throw error;
         }
     }
-    async updateProductsWithSale() {
+    async updateProductsWithSale(productIds, sale) {
         try {
-            // Find all products with a sale value greater than 0
-            const productsWithSale = await productModel.find({ sale: { $gt: 0 } });
+          // Tìm tất cả sản phẩm theo danh sách productIds
+          const products = await productModel.find({ _id: { $in: productIds } });
 
-            // Update the originalPrice for each product
-            const updatePromises = productsWithSale.map(product => {
-                const originalPrice = product.price + (product.price * product.sale / 100);
-                return productModel.findByIdAndUpdate(product._id, { originalPrice }, { new: true });
-            });
-            // Wait for all updates to complete
-            const updatedProducts = await Promise.all(updatePromises);
-            return updatedProducts;
+          // Tạo một mảng promise để cập nhật từng sản phẩm
+          const updatePromises = products.map((product) => {
+            const originalPrice = product.originalPrice || product.price;  // Sử dụng originalPrice nếu có, nếu không thì dùng giá hiện tại
+            const newPrice = originalPrice * ((100 - sale) / 100);         // Tính giá mới sau khi giảm
+
+            // Cập nhật sale và price cho từng sản phẩm
+            return productModel.findByIdAndUpdate(
+              product._id,
+              { sale: sale, price: newPrice.toFixed(2) }, // Cập nhật sale và làm tròn giá
+              { new: true }
+            );
+          });
+
+          // Đợi tất cả các promise hoàn thành
+          const updatedProducts = await Promise.all(updatePromises);
+
+          return updatedProducts;
         } catch (error) {
-            throw error;
+          throw error;  // Để controller xử lý lỗi
         }
-    }
+      }
+
+
     async softDeleteProduct(id, deleteAt) {
         try {
             const updatedProduct = await productModel.findByIdAndUpdate(

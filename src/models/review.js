@@ -38,9 +38,13 @@ const postSchema = new Schema({
         type: Boolean,
         default: false,
     },
-    repcmt:[{
-        type: mongoose.Schema.Types.ObjectId, ref: 'User'
-    }],
+    repCmt: [
+        {
+          userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Người trả lời
+          text: String, // Nội dung phản hồi
+          created_at: { type: Date, default: Date.now } // Thời gian phản hồi
+        }
+      ],
     created_at: {
         type: Date,
         default: Date.now,
