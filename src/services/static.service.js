@@ -196,21 +196,36 @@ const generateStatisticsForYear = async (year) => {
 // Lên lịch cron để chạy vào ngày 1 mỗi tháng lúc 00:00
 cron.schedule('0 0 1 * *', () => {
   const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth() + 1; // Lấy tháng hiện tại (1 - 12)
-
-  console.log(`Chạy thống kê cho tháng ${month}/${year}...`);
-  generateStatisticsForMonth(year, month);
+  console.log(`Chạy thống kê lúc: ${now.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`);
+  generateStatisticsForMonth(now.getFullYear(), now.getMonth() + 1);
+}, {
+  scheduled: true,
+  timezone: "Asia/Ho_Chi_Minh"
 });
+
+
 cron.schedule('0 0 * * *', async () => {
   try {
-      const expiredProducts = await productModel.find({ isDelete: true, delete_at: { $lt: new Date() } });
+      // Tìm tất cả các sản phẩm bị xóa mềm và đã hết hạn xóa
+      const expiredProducts = await productModel.find({
+          isDelete: true,
+          delete_at: { $lt: new Date() }
+      });
 
       for (const product of expiredProducts) {
+          // Kiểm tra tồn kho của sản phẩm
           const inventory = await inventoryModel.findOne({ productId: product._id });
 
           if (!inventory || inventory.quantity === 0) {
+              // Xóa productId khỏi tất cả các danh mục chứa nó
+              await categoryModel.updateMany(
+                  { _id: { $in: product.categoryId } }, // Tìm các category chứa productId
+                  { $pull: { products: product._id } } // Xóa productId khỏi mảng products
+              );
+
+              // Xóa sản phẩm khỏi database
               await productModel.deleteOne({ _id: product._id });
+
               console.log(`Deleted product: ${product.name}`);
           } else {
               console.log(`Cannot delete product ${product.name} because quantity is ${inventory.quantity}`);
@@ -220,7 +235,6 @@ cron.schedule('0 0 * * *', async () => {
       console.error('Error deleting expired soft-deleted products:', error);
   }
 });
-
 
 // Lên lịch cron để chạy thống kê theo quý vào cuối mỗi quý (31 tháng 3, 30 tháng 6, 30 tháng 9, 31 tháng 12)
 cron.schedule('0 0 31 3,6,9,12 *', () => {

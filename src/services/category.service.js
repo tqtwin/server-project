@@ -1,5 +1,5 @@
 const categoryModel = require('../models/category');
-
+const productModel = require('../models/product')
 class CategoryService {
     async createCategory(data) {
         try {
@@ -45,6 +45,35 @@ class CategoryService {
             throw error;
         }
     }
+    // async cleanUpCategoryProducts() {
+    //     try {
+    //         const categories = await categoryModel.find(); // Lấy tất cả danh mục
+
+    //         for (const category of categories) {
+    //             const validProducts = [];
+
+    //             for (const productId of category.products) {
+    //                 const productExists = await productModel.exists({ _id: productId });
+    //                 console.log(productId)
+    //                 if (productExists) {
+    //                     validProducts.push(productId); // Giữ lại product hợp lệ
+    //                 }
+    //             }
+    //             // Cập nhật lại danh mục nếu có productId không hợp lệ
+    //             if (validProducts.length !== category.products.length) {
+    //                 await categoryModel.updateOne(
+    //                     { _id: category._id },
+    //                     { $set: { products: validProducts } }
+    //                 );
+    //                 console.log(`Updated category ${category._id}, removed invalid productIds`);
+    //             }
+    //         }
+
+    //         return { message: 'Clean-up completed' };
+    //     } catch (error) {
+    //         throw error;
+    //     }
+    // }
 }
 
 module.exports = new CategoryService();

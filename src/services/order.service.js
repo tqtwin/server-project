@@ -2,7 +2,7 @@ const orderModel = require('../models/order');
 const productModel = require('../models/product');
 const userModel = require('../models/user');
 const inventoryModel = require('../models/inventory')
-const { sendOrderConfirmationEmail, sendPaymentSuccessEmail } = require('../services/email.service');
+const { sendOrderConfirmationEmail, sendPaymentSuccessEmail ,sendStatusOrderEmail } = require('../services/email.service');
 class OrderService {
     // Tạo đơn hàng
     async createOrder(data) {
@@ -115,7 +115,6 @@ async updateOrder(orderId, data) {
 
         // Nếu trạng thái được cập nhật là "Canceled"
         if (data.statusName === 'Canceled') {
-            // Hoàn trả số lượng vào kho và giảm số lượng đã bán
             for (let item of order.orderDetails) {
                 // Hoàn trả vào tồn kho
                 await inventoryModel.updateOne(
@@ -141,17 +140,24 @@ async updateOrder(orderId, data) {
             orderId,
             {
                 $push: { orderStatus: { name: data.statusName, update: new Date() } },
-                currentStatus: data.statusName, // Cập nhật trạng thái hiện tại
+                currentStatus: data.statusName,
             },
-            { new: true } // Trả về tài liệu đã cập nhật
+            { new: true }
         );
+
+        if (!updatedOrder) throw new Error('Failed to update order');
+
+        // Gửi email thông báo trạng thái đơn hàng mới
+        const user = await userModel.findById(updatedOrder.userId);
+        if (user && user.email) {
+            await sendStatusOrderEmail(user.email, updatedOrder, data.statusName);
+        }
 
         return updatedOrder;
     } catch (error) {
         throw error;
     }
 }
-
 
 // Trong OrderService.js
 async updateOrderPaymentStatus(orderId, paymentStatus, paymentTransactionId) {

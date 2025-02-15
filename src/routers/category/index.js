@@ -2,6 +2,15 @@ const express = require('express');
 const categoryController = require('../../controllers/categorycontroller');
 const { authenticateToken, isAdmin } = require('../../middlewares/auth');
 const router = express.Router();
+const cs = require('../../services/category.service')
+// router.get('/clear/cleanup-categories', async (req, res) => {
+//     try {
+//         const result = await cs.cleanUpCategoryProducts();
+//         res.json(result);
+//     } catch (error) {
+//         res.status(500).json({ message: 'Error cleaning up categories', error: error.message });
+//     }
+// });
 
 /**
  * @swagger

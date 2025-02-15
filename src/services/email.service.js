@@ -123,5 +123,64 @@ const sendPaymentSuccessEmail = async (email, order) => {
         throw new Error('Failed to send payment success email');
     }
 };
+const sendStatusOrderEmail = async (email, order, status) => {
+    console.log(order)
+    const statusMessages = {
+        'Confirmed': 'Đơn hàng của bạn đang được xử lý.',
+        'Processed': 'Đơn hàng của bạn đã được xử lý thành công.',
+        'Shipping': 'Đơn hàng của bạn đang được giao.',
+        'Delivered': 'Đơn hàng của bạn đã được giao thành công.',
+        'Canceled': 'Đơn hàng của bạn đã bị hủy.'
+    };
 
-module.exports = { sendVerificationEmail, sendPasswordResetEmail,sendOrderConfirmationEmail,sendPaymentSuccessEmail };
+    const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: `Cập nhật trạng thái đơn hàng: ${status}`,
+        html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 10px; padding: 20px;">
+                <h2 style="color: #4CAF50; text-align: center;">Cập nhật trạng thái đơn hàng</h2>
+                <p>Chào <strong>${order.recipientName}</strong>,</p>
+                <p>${statusMessages[status]}</p>
+                <h3>Thông tin đơn hàng:</h3>
+                <ul style="list-style: none; padding: 0;">
+                    ${order.orderDetails.map(
+                        (item) => `
+                            <li style="margin-bottom: 15px; border-bottom: 1px solid #ddd; padding-bottom: 10px;">
+                                <img src="cid:image-${item.id}" alt="${item.productName}" style="width: 100px; height: 100px; object-fit: cover; border-radius: 5px; margin-right: 10px; vertical-align: middle;">
+                                <div style="display: inline-block; vertical-align: middle;">
+                                    <strong>${item.productName}</strong><br>
+                                    Số lượng: ${item.quantity}<br>
+                                    Giá: ${item.price.toLocaleString()} đ
+                                </div>
+                            </li>
+                        `
+                    ).join('')}
+                </ul>
+                <p><strong>Tổng tiền:</strong> ${order.totalAmount.toLocaleString()} đ</p>
+                <p><strong>Địa chỉ giao hàng:</strong> ${order.address}</p>
+                <p><strong>Phương thức thanh toán:</strong> ${order.paymentMethod === 'cod' ? 'Thanh toán khi nhận hàng' : order.paymentMethod}</p>
+                <p>Cảm ơn bạn đã tin tưởng và sử dụng dịch vụ của chúng tôi!</p>
+                <hr>
+                <p style="text-align: center;">&copy; ${new Date().getFullYear()} Cửa hàng của chúng tôi. Tất cả các quyền được bảo lưu.</p>
+            </div>
+        `,
+        attachments: order.orderDetails.map((item) => ({
+            filename: `product-${item.id}.png`,
+            content: item.image.split(',')[1],  // Xóa tiền tố 'data:image/png;base64,'
+            encoding: 'base64',
+            cid: `image-${item.id}`  // Mỗi sản phẩm có một Content-ID duy nhất
+        }))
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`Status update email sent successfully for status: ${status}`);
+    } catch (error) {
+        console.error(`Error sending status update email for status: ${status}`, error);
+        throw new Error('Failed to send status update email');
+    }
+};
+
+
+module.exports = { sendVerificationEmail, sendPasswordResetEmail,sendOrderConfirmationEmail,sendPaymentSuccessEmail ,sendStatusOrderEmail};
