@@ -3,6 +3,8 @@ const Statistics = require('../models/static'); // Import model thống kê
 const Order = require('../models/order'); // Import model đơn hàng
 const StockEntry = require('../models/stockEntry'); // Import model nhập hàng
 const productModel = require('../models/product');
+const categoryModel = require('../models/category')
+const inventoryModel = require('../models/inventory')
 // Hàm thống kê và lưu dữ liệu cho tháng
 const generateStatisticsForMonth = async (year, month) => {
   try {
@@ -204,28 +206,25 @@ cron.schedule('0 0 1 * *', () => {
 });
 
 
-cron.schedule('0 * * * *', async () => { // Chạy mỗi giờ một lần
+cron.schedule('* * * * *', async () => { // Chạy mỗi giờ một lần
   try {
-      const now = new Date(); // Thời điểm hiện tại
+      const now = new Date();
+      const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
 
-      // Tìm tất cả sản phẩm đã xóa mềm và đã đến hạn xóa (đúng 3 ngày sau delete_at)
       const expiredProducts = await productModel.find({
           isDelete: true,
-          delete_at: { $lte: now } // Xóa đúng vào thời điểm delete_at + 3 ngày
+          delete_at: { $lte: threeDaysAgo } // Chỉ xóa nếu delete_at + 3 ngày <= hiện tại
       });
 
       for (const product of expiredProducts) {
-          // Kiểm tra tồn kho
           const inventory = await inventoryModel.findOne({ productId: product._id });
 
           if (!inventory || inventory.quantity === 0) {
-              // Xóa productId khỏi danh mục chứa nó
               await categoryModel.updateMany(
                   { _id: { $in: product.categoryId } },
                   { $pull: { products: product._id } }
               );
 
-              // Xóa sản phẩm khỏi database
               await productModel.deleteOne({ _id: product._id });
 
               console.log(`Deleted product: ${product.name}`);

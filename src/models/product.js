@@ -22,14 +22,8 @@ const productSchema = new mongoose.Schema({
     isDelete: {type:Boolean , default: false},
     delete_at: {type: Date}
 });
-productSchema.index({ delete_at: 1 }, { expireAfterSeconds: 259200 }); // 3 ngày = 259200 giây
+// productSchema.index({ delete_at: 1 }, { expireAfterSeconds: 259200 });
 // Middleware để cập nhật danh sách sản phẩm trong danh mục
-productSchema.post('save', async function(doc) {
-    const Category = require('./category'); // Nhập model Category
-    await Category.findByIdAndUpdate(this.categoryId, {
-        $addToSet: { products: doc._id } // Thêm productId vào danh sách sản phẩm
-    });
-});
 // Trong schema của product
 productSchema.index({ name: 'text', description: 'text', tags: 'text' });
 

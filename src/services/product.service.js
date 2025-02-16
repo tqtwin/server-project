@@ -72,12 +72,12 @@ class ProductService {
     // }
     async createProduct(data) {
         try {
-            console.log('Received product data:', data);
+            // console.log('Received product data:', data);
 
             // Save product data to the database directly
             const product = await productModel.create(data);
 
-            console.log('Product created successfully:', product);
+            // console.log('Product created successfully:', product);
             return product;
         } catch (error) {
             console.error('Error in createProduct:', error);
