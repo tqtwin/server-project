@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const StockEntry = require('./stockEntry');
 const { type } = require('express/lib/response');
 
+
 const productSchema = new mongoose.Schema({
     name: { type: String, required: true },
     price: { type: Number, required: true },
@@ -21,7 +22,7 @@ const productSchema = new mongoose.Schema({
     isDelete: {type:Boolean , default: false},
     delete_at: {type: Date}
 });
-
+productSchema.index({ delete_at: 1 }, { expireAfterSeconds: 259200 }); // 3 ngày = 259200 giây
 // Middleware để cập nhật danh sách sản phẩm trong danh mục
 productSchema.post('save', async function(doc) {
     const Category = require('./category'); // Nhập model Category

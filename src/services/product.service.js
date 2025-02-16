@@ -230,9 +230,7 @@ async softDeleteProduct(req, res) {
         }
 
         // Cập nhật isDelete và delete_at
-        const deleteAt = new Date();
-        deleteAt.setDate(deleteAt.getDate() + 3); // Cộng 3 ngày
-        const updatedProduct = await ProductService.softDeleteProduct(productId, deleteAt);
+        const updatedProduct = await ProductService.softDeleteProduct(productId, new Date());
 
         return res.status(200).json(updatedProduct);
     } catch (error) {
@@ -276,11 +274,11 @@ async softDeleteProduct(req, res) {
       }
 
 
-    async softDeleteProduct(id, deleteAt) {
+      async softDeleteProduct(id, deleteAt) {
         try {
             const updatedProduct = await productModel.findByIdAndUpdate(
                 id,
-                { isDelete: true, delete_at: deleteAt },
+                { isDelete: true, delete_at: deleteAt },  // Xóa mềm ngay lúc bấm
                 { new: true } // Trả về sản phẩm đã cập nhật
             );
             return updatedProduct;
@@ -288,6 +286,7 @@ async softDeleteProduct(req, res) {
             throw error;
         }
     }
+
     async getBestSellingProducts(limit = 10) {
         try {
             // Tìm các sản phẩm và sắp xếp theo `sold` giảm dần
