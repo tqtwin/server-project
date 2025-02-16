@@ -204,23 +204,25 @@ cron.schedule('0 0 1 * *', () => {
 });
 
 
-cron.schedule('0 0 * * *', async () => {
+cron.schedule('0 * * * *', async () => { // Chạy mỗi giờ một lần
   try {
-      // Tìm tất cả các sản phẩm bị xóa mềm và đã hết hạn xóa
+      const now = new Date(); // Thời điểm hiện tại
+
+      // Tìm tất cả sản phẩm đã xóa mềm và đã đến hạn xóa (đúng 3 ngày sau delete_at)
       const expiredProducts = await productModel.find({
           isDelete: true,
-          delete_at: { $lt: new Date() }
+          delete_at: { $lte: now } // Xóa đúng vào thời điểm delete_at + 3 ngày
       });
 
       for (const product of expiredProducts) {
-          // Kiểm tra tồn kho của sản phẩm
+          // Kiểm tra tồn kho
           const inventory = await inventoryModel.findOne({ productId: product._id });
 
           if (!inventory || inventory.quantity === 0) {
-              // Xóa productId khỏi tất cả các danh mục chứa nó
+              // Xóa productId khỏi danh mục chứa nó
               await categoryModel.updateMany(
-                  { _id: { $in: product.categoryId } }, // Tìm các category chứa productId
-                  { $pull: { products: product._id } } // Xóa productId khỏi mảng products
+                  { _id: { $in: product.categoryId } },
+                  { $pull: { products: product._id } }
               );
 
               // Xóa sản phẩm khỏi database
