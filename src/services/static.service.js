@@ -196,7 +196,16 @@ const generateStatisticsForYear = async (year) => {
   }
 };
 // Lên lịch cron để chạy vào ngày 1 mỗi tháng lúc 00:00
-cron.schedule('0 0 1 * *', () => {
+// cron.schedule('0 0 1 * *', () => {
+//   const now = new Date();
+//   console.log(`Chạy thống kê lúc: ${now.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`);
+//   generateStatisticsForMonth(now.getFullYear(), now.getMonth() + 1);
+// }, {
+//   scheduled: true,
+//   timezone: "Asia/Ho_Chi_Minh"
+// });
+
+cron.schedule('40 10 16 2 *', () => {
   const now = new Date();
   console.log(`Chạy thống kê lúc: ${now.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`);
   generateStatisticsForMonth(now.getFullYear(), now.getMonth() + 1);
@@ -204,7 +213,6 @@ cron.schedule('0 0 1 * *', () => {
   scheduled: true,
   timezone: "Asia/Ho_Chi_Minh"
 });
-
 
 cron.schedule('0 0 * * * *', async () => { // Chạy mỗi giờ một lần
   try {
