@@ -206,7 +206,7 @@ cron.schedule('0 0 1 * *', () => {
 });
 
 
-cron.schedule('* * * * *', async () => { // Chạy mỗi giờ một lần
+cron.schedule('0 0 * * * *', async () => { // Chạy mỗi giờ một lần
   try {
       const now = new Date();
       const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
