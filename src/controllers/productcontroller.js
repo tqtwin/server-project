@@ -163,9 +163,8 @@ class ProductController {
             }
 
             // Cập nhật isDelete và delete_at
-            const deleteAt = new Date();
-            deleteAt.setDate(deleteAt.getDate() + 3); // Cộng 3 ngày
-            const updatedProduct = await ProductService.softDeleteProduct(productId, deleteAt);
+            const updatedProduct = await ProductService.softDeleteProduct(productId, new Date());
+
 
             return res.status(200).json(updatedProduct);
         } catch (error) {

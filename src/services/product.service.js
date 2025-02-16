@@ -221,22 +221,6 @@ class ProductService {
             throw error;
         }
     }
-async softDeleteProduct(req, res) {
-    try {
-        const productId = req.params.id;
-        const product = await ProductService.getProductById(productId);
-        if (!product) {
-            return res.status(404).json({ message: 'Product not found' });
-        }
-
-        // Cập nhật isDelete và delete_at
-        const updatedProduct = await ProductService.softDeleteProduct(productId, new Date());
-
-        return res.status(200).json(updatedProduct);
-    } catch (error) {
-        return res.status(500).json({ message: 'Error updating product for deletion', error: error.message });
-    }
-}
 
     async deleteProduct(id) {
         try {
