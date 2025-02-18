@@ -7,7 +7,7 @@ const server = http.createServer(app);
 
 const io = socketIO(server, {
     cors: {
-        origin: ['http://localhost:3000', 'http://localhost:3001'], // Cho phép origin từ các port client
+        origin: ['http://localhost:3000', 'http://localhost:3001','https://client-user-alpha.vercel.app','https://client-admin-gamma.vercel.app'], // Cho phép origin từ các port client
         methods: ['GET', 'POST'],
         credentials: true, // Đảm bảo gửi cookie và các thông tin xác thực
     }
