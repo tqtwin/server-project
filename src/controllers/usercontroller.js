@@ -12,55 +12,46 @@ const redisClient = require('../dbs/redis'); // Import the Redis client
 const { messaging } = require('firebase-admin');
 class UserController {
     async googleLogin(req, res) {
-        const { tokenId } = req.body;  // Token received from Google OAuth
+        const { tokenId } = req.body;
         try {
-            // Verify the token with Google
             const ticket = await client.verifyIdToken({
                 idToken: tokenId,
-                audience: '478853764334-anrujr0ho33g1ghavi6c8m7vcu5aiuu7.apps.googleusercontent.com',  // Client ID for your app
+                audience: '478853764334-anrujr0ho33g1ghavi6c8m7vcu5aiuu7.apps.googleusercontent.com',
             });
 
-            const payload = ticket.getPayload();  // Extract payload from token
-
-            // Check if the user already exists by email
+            const payload = ticket.getPayload();
             let user = await userService.getUserByEmail(payload.email);
 
-            if (user.isLock) {
-                return res.status(403).json({
-                    message: 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.',
-                    success: false
-                });
-            }
-
-
-            if (!user) {
-                // If user doesn't exist, create a new one
-                const role = await Role.findOne({ name: 'user' }); // Assign default role
+            if (user) {
+                if (!user.isLock) {
+                    return res.status(403).json({
+                        message: 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.',
+                        success: false
+                    });
+                }
+            } else {
+                const role = await Role.findOne({ name: 'user' });
                 if (!role) {
                     return res.status(400).json({ message: 'Role not found', success: false });
                 }
 
-                // Create new user based on the data from Google
                 user = new User({
                     name: payload.name,
                     email: payload.email,
                     avatar: payload.picture,
-                    status: 'active', // You can set any default status here
+                    status: 'active',
                     roleId: role._id
                 });
 
-                // Save the new user to the database
                 await user.save();
             }
 
-            // Create JWT token for the user
             const token = jwt.sign(
                 { id: user._id, role: user.roleId.name, status: user.status },
                 process.env.JWT_SECRET,
-                { expiresIn: '1h' } // Token expiration
+                { expiresIn: '1h' }
             );
 
-            // Respond with success and token
             return res.status(200).json({
                 message: 'Login successful',
                 success: true,
@@ -80,6 +71,7 @@ class UserController {
             return res.status(500).json({ message: 'Google login failed', success: false });
         }
     }
+
 
     // User signup
     async signup(req, res) {
