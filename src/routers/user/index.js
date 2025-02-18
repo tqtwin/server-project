@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const UserController = require('../../controllers/usercontroller');
-const userService = require('../../services/user.service')
+const userService = require('../../services/user.service');
+const { authenticateToken, isAdmin } = require('../../middlewares/auth');
 /**
  * @swagger
  * tags:
@@ -308,7 +309,7 @@ router.put('/:id', UserController.updateUser);
  *       404:
  *         description: Không tìm thấy người dùng
  */
-router.delete('/:id', UserController.deleteUserAndPosts);
+router.delete('/:id',authenticateToken, isAdmin, UserController.deleteUserAndPosts);
 router.post('/verify', UserController.verifyCode);
 router.post('/reset-password', UserController.resetPassword);
 router.post('/forgot-password', UserController.forgotPassword)

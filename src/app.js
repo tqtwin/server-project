@@ -5,7 +5,7 @@ const cors = require('cors');
 const app = express();
 
 // Cấu hình CORS
-const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001'];
+const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001','https://client-user-alpha.vercel.app'];
 app.use(cors({
     origin: function(origin, callback) {
         if (!origin || allowedOrigins.includes(origin)) {

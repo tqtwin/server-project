@@ -1,8 +1,10 @@
 const orderModel = require('../models/order');
 const productModel = require('../models/product');
 const userModel = require('../models/user');
+const GroupChat = require('../models/GroupChat');
+const ChatController = require('../controllers/chatcontroller')
 const inventoryModel = require('../models/inventory')
-const { sendOrderConfirmationEmail, sendPaymentSuccessEmail ,sendStatusOrderEmail } = require('../services/email.service');
+const { sendOrderConfirmationEmail, sendPaymentSuccessEmail, sendStatusOrderEmail } = require('../services/email.service');
 class OrderService {
     // Tạo đơn hàng
     async createOrder(data) {
@@ -64,7 +66,18 @@ class OrderService {
             if (paymentMethod === 'cod') {
                 await sendOrderConfirmationEmail(user.email, order);
             }
+            // Kiểm tra xem userId có nhóm chat không
+            const userGroupChat = await GroupChat.findOne({ userId });
 
+            if (userGroupChat) {
+                const autoMessage = {
+                    groupId: userGroupChat._id,
+                    role: 'auto',
+                    text: `📦 Đơn hàng mới đã được tạo! Mã đơn hàng: #${order._id}. Cảm ơn bạn đã mua sắm tại cửa hàng!`,
+                };
+
+                await ChatController.saveMessage(autoMessage);
+            }
             return order;
         } catch (error) {
             throw error;
@@ -107,89 +120,102 @@ class OrderService {
         }
     }
 
-// Cập nhật trạng thái hoặc thông tin đơn hàng
-async updateOrder(orderId, data) {
-    try {
-        const order = await orderModel.findById(orderId);
-        if (!order) throw new Error('Order not found');
+    // Cập nhật trạng thái hoặc thông tin đơn hàng
+    async updateOrder(orderId, data) {
+        try {
+            const order = await orderModel.findById(orderId);
+            if (!order) throw new Error('Order not found');
 
-        // Nếu trạng thái được cập nhật là "Canceled"
-        if (data.statusName === 'Canceled') {
-            for (let item of order.orderDetails) {
-                // Hoàn trả vào tồn kho
-                await inventoryModel.updateOne(
-                    { productId: item.productId },
-                    { $inc: { quantity: item.quantity } } // Cộng lại số lượng tồn kho
-                );
+            // Nếu trạng thái được cập nhật là "Canceled"
+            if (data.statusName === 'Canceled') {
+                for (let item of order.orderDetails) {
+                    // Hoàn trả vào tồn kho
+                    await inventoryModel.updateOne(
+                        { productId: item.productId },
+                        { $inc: { quantity: item.quantity } } // Cộng lại số lượng tồn kho
+                    );
+                }
             }
-        }
 
-        // Nếu trạng thái được cập nhật là "Delivered"
-        if (data.statusName === 'Delivered') {
-            for (let item of order.orderDetails) {
-                // Cập nhật số lượng đã bán
-                await productModel.updateOne(
-                    { _id: item.productId },
-                    { $inc: { sold: item.quantity } } // Tăng số lượng đã bán
-                );
+            // Nếu trạng thái được cập nhật là "Delivered"
+            if (data.statusName === 'Delivered') {
+                for (let item of order.orderDetails) {
+                    // Cập nhật số lượng đã bán
+                    await productModel.updateOne(
+                        { _id: item.productId },
+                        { $inc: { sold: item.quantity } } // Tăng số lượng đã bán
+                    );
+                }
             }
-        }
 
-        // Cập nhật trạng thái đơn hàng
-        const updatedOrder = await orderModel.findByIdAndUpdate(
-            orderId,
-            {
-                $push: { orderStatus: { name: data.statusName, update: new Date() } },
-                currentStatus: data.statusName,
-            },
-            { new: true }
-        );
+            // Cập nhật trạng thái đơn hàng
+            const updatedOrder = await orderModel.findByIdAndUpdate(
+                orderId,
+                {
+                    $push: { orderStatus: { name: data.statusName, update: new Date() } },
+                    currentStatus: data.statusName,
+                },
+                { new: true }
+            );
 
-        if (!updatedOrder) throw new Error('Failed to update order');
+            if (!updatedOrder) throw new Error('Failed to update order');
 
-        // Gửi email thông báo trạng thái đơn hàng mới
-        const user = await userModel.findById(updatedOrder.userId);
-        if (user && user.email) {
-            await sendStatusOrderEmail(user.email, updatedOrder, data.statusName);
-        }
-
-        return updatedOrder;
-    } catch (error) {
-        throw error;
-    }
-}
-
-// Trong OrderService.js
-async updateOrderPaymentStatus(orderId, paymentStatus, paymentTransactionId) {
-    try {
-        const order = await orderModel.findByIdAndUpdate(
-            orderId,
-            {
-                paymentStatus: paymentStatus,
-                paymentTransactionId: paymentTransactionId, // ID giao dịch thanh toán
-                paymentDate: new Date(), // Ngày thanh toán
-            },
-            { new: true } // Trả về tài liệu đã cập nhật
-        );
-
-        if (!order) {
-            throw new Error('Order not found');
-        }
-
-        // Nếu thanh toán thành công, gửi email xác nhận và cập nhật thêm thông tin
-        if (paymentStatus === 'Success') {
-
-            const user = await userModel.findById(order.userId);
+            // Gửi email thông báo trạng thái đơn hàng mới
+            const user = await userModel.findById(updatedOrder.userId);
             if (user && user.email) {
-                await sendPaymentSuccessEmail(user.email, order);
+                await sendStatusOrderEmail(user.email, updatedOrder, data.statusName);
             }
-        }
 
-        return order;
-    } catch (error) {
-        throw error;
+            // Kiểm tra userId có nhóm chat không
+            const userGroupChat = await GroupChat.findOne({ userId: order.userId });
+
+            if (userGroupChat) {
+                const statusMessage = {
+                    groupId: userGroupChat._id,
+                    role: 'auto',
+                    text: `🔄 Trạng thái đơn hàng #${order._id} đã được cập nhật: ${data.statusName}`,
+                };
+
+                await ChatController.saveMessage(statusMessage);
+            }
+
+            return updatedOrder;
+        } catch (error) {
+            throw error;
+        }
     }
-}
+
+    // Trong OrderService.js
+    async updateOrderPaymentStatus(orderId, paymentStatus, paymentTransactionId) {
+        try {
+            const order = await orderModel.findByIdAndUpdate(
+                orderId,
+                {
+                    paymentStatus: paymentStatus,
+                    paymentTransactionId: paymentTransactionId, // ID giao dịch thanh toán
+                    paymentDate: new Date(), // Ngày thanh toán
+                },
+                { new: true } // Trả về tài liệu đã cập nhật
+            );
+
+            if (!order) {
+                throw new Error('Order not found');
+            }
+
+            // Nếu thanh toán thành công, gửi email xác nhận và cập nhật thêm thông tin
+            if (paymentStatus === 'Success') {
+
+                const user = await userModel.findById(order.userId);
+                if (user && user.email) {
+                    await sendPaymentSuccessEmail(user.email, order);
+                }
+            }
+
+            return order;
+        } catch (error) {
+            throw error;
+        }
+    }
     // Xóa đơn hàng
     async deleteOrder(orderId) {
         try {
@@ -206,34 +232,34 @@ async updateOrderPaymentStatus(orderId, paymentStatus, paymentTransactionId) {
     }
     async deleteAllOrders() {
         try {
-          // Tìm tất cả các đơn hàng có thuộc tính deleted: true
-          const deletedOrders = await orderModel.find({ deleted: true });
+            // Tìm tất cả các đơn hàng có thuộc tính deleted: true
+            const deletedOrders = await orderModel.find({ deleted: true });
 
-          // Nếu không có đơn hàng nào bị xóa, trả về thông báo
-          if (deletedOrders.length === 0) {
-            return { message: 'Không có đơn hàng nào đã bị xóa.' };
-          }
-
-          // Lặp qua tất cả các đơn hàng đã bị xóa
-          for (let order of deletedOrders) {
-            // Lấy người dùng liên quan đến đơn hàng
-            const user = await userModel.findOne({ orders: order._id });
-
-            // Nếu người dùng có đơn hàng này, xóa khỏi danh sách đơn hàng của họ
-            if (user) {
-              user.orders.pull(order._id);
-              await user.save();
+            // Nếu không có đơn hàng nào bị xóa, trả về thông báo
+            if (deletedOrders.length === 0) {
+                return { message: 'Không có đơn hàng nào đã bị xóa.' };
             }
 
-            // Xóa đơn hàng khỏi database (có thể sử dụng findByIdAndDelete nếu muốn xóa hoàn toàn)
-            await orderModel.findByIdAndDelete(order._id);
-          }
+            // Lặp qua tất cả các đơn hàng đã bị xóa
+            for (let order of deletedOrders) {
+                // Lấy người dùng liên quan đến đơn hàng
+                const user = await userModel.findOne({ orders: order._id });
 
-          return { message: `${deletedOrders.length} đơn hàng đã bị xóa thành công.` };
+                // Nếu người dùng có đơn hàng này, xóa khỏi danh sách đơn hàng của họ
+                if (user) {
+                    user.orders.pull(order._id);
+                    await user.save();
+                }
+
+                // Xóa đơn hàng khỏi database (có thể sử dụng findByIdAndDelete nếu muốn xóa hoàn toàn)
+                await orderModel.findByIdAndDelete(order._id);
+            }
+
+            return { message: `${deletedOrders.length} đơn hàng đã bị xóa thành công.` };
         } catch (error) {
-          throw error;
+            throw error;
         }
-      }
+    }
 
 
 }
